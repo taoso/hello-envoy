@@ -1,0 +1,14 @@
+version_info: "0"
+resources:
+  # 可以返回多个 route 配置
+  - "@type": type.googleapis.com/envoy.api.v2.RouteConfiguration
+    name: local_route # route 配置名称
+    virtual_hosts: # http 虚拟主机
+      - name: service_ab
+        domains: ["*"] # 匹配所有域名
+        routes:
+          - match:
+              prefix: "/" # 匹配所有 path
+            route:
+              cluster: service_ab # 路由到名为 service_ab 的 cluster
+              retry_policy: { retry_on: 5xx } # 遇到 5xx 重试一次

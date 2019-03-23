@@ -1,0 +1,29 @@
+version_info: "0"
+resources:
+  # 可以返回多个 cluster 配置
+  - "@type": type.googleapis.com/envoy.api.v2.Cluster
+    name: service_ab         # cluster 名字
+    connect_timeout: 0.02s   # 连接超时
+    lb_policy: ROUND_ROBIN   # 负载均衡策略
+    health_checks:           # 健康检查配置
+      timeout: 0.01s         # 检查超时时间
+      interval: 30s          # 检查间隔
+      unhealthy_threshold: 3 # 失败阈值
+      healthy_threshold: 3   # 成功阈值
+      http_health_check:     # 使用 http 方式探测
+        path: /monitor/ping  # 健康检查接口
+    # 为了方便，直接嵌入 endpoint 配置，并没有使用 eds
+    load_assignment:
+      cluster_name: service_ab
+      endpoints:
+        - lb_endpoints:
+          - endpoint:
+              address:
+                socket_address:
+                  address: 127.0.0.1
+                  port_value: 8001
+          - endpoint:
+              address:
+                socket_address:
+                  address: 127.0.0.1
+                  port_value: 8002

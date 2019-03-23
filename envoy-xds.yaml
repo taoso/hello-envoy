@@ -1,0 +1,26 @@
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9000 }
+
+static_resources:
+  listeners:
+    - name: l0 # 对我们来说一个 listener 足够了
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 8000 }
+      filter_chains:
+        - filters:
+          - name: envoy.http_connection_manager
+            config:
+              stat_prefix: ingress_http
+              codec_type: auto
+              rds:                             # 使用 rds 动态加载 route 配置
+                route_config_name: local_route # 指定 route 配置名字
+                config_source:
+                  path: rds.yaml               # 监听文件变动
+              http_filters:                    # 漏写 filter 会导致请求超时
+                - name: envoy.router
+
+dynamic_resources: # 动态配置
+  cds_config:
+    path: cds.yaml # 监听文件变动，加载 cluster 配置
