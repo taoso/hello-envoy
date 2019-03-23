@@ -1,0 +1,34 @@
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9000 }
+
+static_resources:
+  listeners:
+    - name: l0
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 8000 }
+      filter_chains:
+        - filters:
+          - name: envoy.http_connection_manager
+            config:
+              stat_prefix: ingress_http
+              codec_type: auto
+              route_config:
+                name: local_route
+                virtual_hosts:
+                  - name: local_service
+                    domains: ["*"]
+                    routes:
+                      - match: { prefix: "/" }
+                        route: { host_rewrite: baidu.com, cluster: service_baidu }
+
+              http_filters:
+                - name: envoy.router
+  clusters:
+    - name: service_baidu
+      connect_timeout: 0.25s
+      type: logical_dns
+      dns_lookup_family: v4_only
+      lb_policy: round_robin
+      hosts: [{ socket_address: { address: baidu.com, port_value: 80 }}]
